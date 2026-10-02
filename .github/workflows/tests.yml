@@ -1,0 +1,94 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      marker:
+        description: "pytest -m expression for UI tests (e.g. smoke)"
+        required: false
+        default: "ui"
+  schedule:
+    - cron: "0 1 * * *" # daily 08:00 WIB
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  api:
+    name: API tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # APIRequestContext needs no browser binary, so no `playwright install` here.
+      - name: Run API tests
+        run: pytest -m api --html=reports/api-report.html --self-contained-html --junitxml=reports/api-junit.xml
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-report
+          path: reports/
+
+  ui:
+    name: UI tests (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Playwright browser
+        run: python -m playwright install --with-deps ${{ matrix.browser }}
+
+      - name: Run UI tests
+        run: >
+          pytest -m "${{ github.event.inputs.marker || 'ui' }}"
+          --browser ${{ matrix.browser }}
+          -n auto --reruns 1
+          --html=reports/ui-${{ matrix.browser }}-report.html --self-contained-html
+          --junitxml=reports/ui-${{ matrix.browser }}-junit.xml
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-report-${{ matrix.browser }}
+          path: reports/
+
+      # Screenshots, videos and traces of failed tests (open traces at trace.playwright.dev).
+      - name: Upload failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.browser }}
+          path: test-results/
+          retention-days: 7
