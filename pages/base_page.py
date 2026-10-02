@@ -1,33 +1,50 @@
-from playwright.sync_api import Page
+import re
+
+from playwright.sync_api import Page, expect
+
+from .components import HeaderComponent
 
 
 class BasePage:
-    """Shared helpers for all Saucedemo pages.
+    """Root of every page object.
 
-    Saucedemo tags elements with `data-test`, which conftest registers as
-    Playwright's test-id attribute, so `get_by_test_id` works everywhere.
+    Conventions used by all pages:
+    - Locators are attributes created in __init__ (lazy; nothing is queried yet).
+    - Actions that navigate return the *next* page object, already verified
+      with `should_be_loaded()`, so tests read as a fluent user journey.
+    - Assertions stay in tests; page objects only expose `should_be_loaded`
+      (and small `should_*` helpers) that guard navigation.
     """
 
     path = "/"
 
     def __init__(self, page: Page):
         self.page = page
-        self.title = page.get_by_test_id("title")
-        self.cart_link = page.get_by_test_id("shopping-cart-link")
-        self.cart_badge = page.get_by_test_id("shopping-cart-badge")
 
     def open(self):
         self.page.goto(self.path)
+        return self.should_be_loaded()
+
+    def should_be_loaded(self):
+        expect(self.page).to_have_url(re.compile(re.escape(self.path)))
         return self
 
-    def cart_count(self) -> int:
-        if self.cart_badge.count() == 0:
-            return 0
-        return int(self.cart_badge.inner_text())
 
-    def go_to_cart(self):
-        self.cart_link.click()
+class AppPage(BasePage):
+    """A page behind login: has the header (menu + cart) and usually a title."""
 
-    def logout(self):
-        self.page.get_by_role("button", name="Open Menu").click()
-        self.page.get_by_test_id("logout-sidebar-link").click()
+    title_text: str | None = None
+
+    def __init__(self, page: Page):
+        super().__init__(page)
+        self.header = HeaderComponent(page)
+        self.title = page.get_by_test_id("title")
+
+    def should_be_loaded(self):
+        super().should_be_loaded()
+        if self.title_text:
+            expect(self.title).to_have_text(self.title_text)
+        return self
+
+    def open_cart(self):
+        return self.header.open_cart()

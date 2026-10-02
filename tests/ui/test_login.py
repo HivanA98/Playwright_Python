@@ -1,27 +1,27 @@
 import pytest
 from playwright.sync_api import expect
 
-from pages import InventoryPage
+from data import Users
+from pages import InventoryPage, LoginPage
 
 pytestmark = pytest.mark.ui
 
 
 @pytest.mark.smoke
-def test_standard_user_can_login(login_page, password):
-    login_page.login("standard_user", password)
+def test_standard_user_can_login(login_page: LoginPage):
+    inventory = login_page.login(Users.STANDARD)
 
-    expect(login_page.page).to_have_url("/inventory.html")
-    expect(InventoryPage(login_page.page).title).to_have_text("Products")
+    expect(inventory.cards).to_have_count(6)
 
 
-def test_locked_out_user_sees_error(login_page, password):
-    login_page.login("locked_out_user", password)
+def test_locked_out_user_sees_error(login_page: LoginPage):
+    login_page.login_expecting_error(Users.LOCKED_OUT.username, Users.LOCKED_OUT.password)
 
     expect(login_page.error).to_contain_text("this user has been locked out")
 
 
 @pytest.mark.parametrize(
-    "username, pwd, message",
+    "username, password, message",
     [
         ("", "", "Username is required"),
         ("standard_user", "", "Password is required"),
@@ -30,22 +30,24 @@ def test_locked_out_user_sees_error(login_page, password):
     ],
     ids=["empty-form", "missing-password", "wrong-password", "unknown-user"],
 )
-def test_invalid_login_shows_error(login_page, username, pwd, message):
-    login_page.login(username, pwd)
+def test_invalid_login_shows_error(login_page: LoginPage, username, password, message):
+    login_page.login_expecting_error(username, password)
 
     expect(login_page.error).to_contain_text(message)
-    expect(login_page.page).not_to_have_url("/inventory.html")
+    expect(login_page.page).not_to_have_url(InventoryPage.path)
 
 
 def test_protected_page_requires_login(page):
-    page.goto("/inventory.html")
+    page.goto(InventoryPage.path)
 
-    expect(page.get_by_test_id("error")).to_contain_text(
+    login = LoginPage(page).should_be_loaded()
+    expect(login.error).to_contain_text(
         "You can only access '/inventory.html' when you are logged in"
     )
 
 
-def test_logout_returns_to_login(inventory_page):
-    inventory_page.logout()
+def test_logout_ends_session(inventory_page: InventoryPage):
+    login = inventory_page.header.logout()
 
-    expect(inventory_page.page.get_by_test_id("login-button")).to_be_visible()
+    login.page.goto(InventoryPage.path)
+    expect(login.error).to_contain_text("when you are logged in")

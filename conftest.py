@@ -3,12 +3,13 @@ import os
 import pytest
 from playwright.sync_api import Playwright, expect
 
+from data import Users
 from pages import InventoryPage, LoginPage
 
 BASE_URL = os.getenv("BASE_URL", "https://www.saucedemo.com")
-PASSWORD = os.getenv("SAUCE_PASSWORD", "secret_sauce")
 
-expect.set_options(timeout=10_000)
+# performance_glitch_user takes ~5s to log in; leave headroom for slow CI runners.
+expect.set_options(timeout=15_000)
 
 
 @pytest.fixture(scope="session")
@@ -23,11 +24,6 @@ def _data_test_attribute(playwright: Playwright):
     playwright.selectors.set_test_id_attribute("data-test")
 
 
-@pytest.fixture(scope="session")
-def password() -> str:
-    return PASSWORD
-
-
 @pytest.fixture
 def login_page(page) -> LoginPage:
     return LoginPage(page).open()
@@ -38,7 +34,7 @@ def logged_in_page(page, context, base_url):
     """Skip the login form: Saucedemo keeps the session in a plain cookie."""
     context.add_cookies([{
         "name": "session-username",
-        "value": "standard_user",
+        "value": Users.STANDARD.username,
         "url": base_url,
     }])
     return page
@@ -46,9 +42,7 @@ def logged_in_page(page, context, base_url):
 
 @pytest.fixture
 def inventory_page(logged_in_page) -> InventoryPage:
-    inventory = InventoryPage(logged_in_page).open()
-    expect(inventory.title).to_have_text("Products")
-    return inventory
+    return InventoryPage(logged_in_page).open()
 
 
 @pytest.fixture

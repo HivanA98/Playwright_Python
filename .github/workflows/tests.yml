@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       marker:
-        description: "pytest -m expression for UI tests (e.g. smoke)"
+        description: "pytest -m expression for browser tests (e.g. smoke, e2e, \"ui and not known_bug\")"
         required: false
-        default: "ui"
+        default: "ui or e2e"
   schedule:
     - cron: "0 1 * * *" # daily 08:00 WIB
 
@@ -48,7 +48,7 @@ jobs:
           path: reports/
 
   ui:
-    name: UI tests (${{ matrix.browser }})
+    name: UI + E2E (${{ matrix.browser }})
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
@@ -69,9 +69,9 @@ jobs:
       - name: Install Playwright browser
         run: python -m playwright install --with-deps ${{ matrix.browser }}
 
-      - name: Run UI tests
+      - name: Run UI + E2E tests
         run: >
-          pytest -m "${{ github.event.inputs.marker || 'ui' }}"
+          pytest -m "${{ github.event.inputs.marker || 'ui or e2e' }}"
           --browser ${{ matrix.browser }}
           -n auto --reruns 1
           --html=reports/ui-${{ matrix.browser }}-report.html --self-contained-html
