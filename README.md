@@ -4,32 +4,42 @@
 
 **Playwright + pytest (Python) · UI, E2E & API · Page Object Model · GitHub Actions**
 
-[![Tests](https://github.com/<username>/Playwright_Python/actions/workflows/tests.yml/badge.svg)](https://github.com/<username>/Playwright_Python/actions/workflows/tests.yml)
+[![Tests](https://github.com/HivanA98/Playwright_Python/actions/workflows/tests.yml/badge.svg)](https://github.com/HivanA98/Playwright_Python/actions/workflows/tests.yml)
 ![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-1.x-2EAD33?logo=playwright&logoColor=white)
 ![pytest](https://img.shields.io/badge/pytest-8.x-0A9EDC?logo=pytest&logoColor=white)
 ![Tests](https://img.shields.io/badge/tests-52-blueviolet)
 
-Test otomatis untuk toko demo **[saucedemo.com](https://www.saucedemo.com)** — dari login, belanja, sampai checkout — dijalankan otomatis di 3 browser setiap ada push.
+Automated tests for the **[saucedemo.com](https://www.saucedemo.com)** demo shop — from login and shopping all the way to checkout — running automatically on 3 browsers on every push.
 
-[⚡ Quick Start](#-quick-start-60-detik) · [🗺️ Arsitektur](#️-arsitektur-page-object-model) · [🛒 Skenario E2E](#-skenario-e2e) · [🐞 Known Bugs](#-known-bugs) · [⌨️ Cheat Sheet](#️-cheat-sheet-perintah) · [🤖 CI](#-github-actions)
+[⚡ Quick Start](#-quick-start-60-seconds) · [🗺️ Architecture](#️-architecture-page-object-model) · [🛒 E2E Scenarios](#-e2e-scenarios) · [🐞 Known Bugs](#-known-bugs) · [⌨️ Cheat Sheet](#️-command-cheat-sheet) · [🤖 CI](#-github-actions)
 
 </div>
 
 ---
 
-## ⚡ Quick Start (60 detik)
+## ⚡ Quick Start (60 seconds)
 
 > [!TIP]
-> Butuh **Python 3.10+**. Klik ikon salin di pojok tiap blok kode, lalu jalankan berurutan.
+> Requires **Python 3.10+**. Use the copy icon on each code block and run them in order.
 
-**1. Buat virtual environment**
+**1. Clone the repository**
+
+```bash
+git clone https://github.com/HivanA98/Playwright_Python.git
+```
+
+```bash
+cd Playwright_Python
+```
+
+**2. Create a virtual environment**
 
 ```bash
 python -m venv .venv
 ```
 
-**2. Aktifkan** — pilih sesuai OS:
+**3. Activate it** — pick your OS:
 
 <details>
 <summary>🪟 Windows (PowerShell)</summary>
@@ -47,7 +57,7 @@ source .venv/bin/activate
 ```
 </details>
 
-**3. Install dependensi + browser**
+**4. Install dependencies + browser**
 
 ```bash
 pip install -r requirements.txt
@@ -57,38 +67,38 @@ pip install -r requirements.txt
 python -m playwright install chromium
 ```
 
-**4. Jalankan semua test** 🚀
+**5. Run all tests** 🚀
 
 ```bash
 pytest -n auto
 ```
 
-Hasil yang diharapkan:
+Expected result:
 
 ```text
 ======================= 45 passed, 7 xfailed in ~25s ========================
 ```
 
 > [!NOTE]
-> **7 xfailed itu normal**, bukan error — itu test untuk bug yang memang sengaja ada di Saucedemo. Lihat [🐞 Known Bugs](#-known-bugs).
+> **7 xfailed is expected**, not an error — those tests cover bugs that Saucedemo ships on purpose. See [🐞 Known Bugs](#-known-bugs).
 
 ---
 
-## 📊 Apa yang Diuji?
+## 📊 What Is Tested?
 
-| Suite | Marker | Jumlah | Butuh browser? | Isi |
+| Suite | Marker | Count | Browser? | Covers |
 |---|---|:-:|:-:|---|
-| 🖥️ **UI** | `ui` | 26 | ✅ | Login, katalog, sorting, detail produk, validasi form, network |
-| 🛒 **E2E** | `e2e` | 12 | ✅ | Perjalanan belanja lengkap lintas halaman & user |
-| 🐞 **Known bugs** | `e2e` + `known_bug` | 7 | ✅ | Bug bawaan user khusus Saucedemo (xfail strict) |
-| 🌐 **API** | `api` | 7 | ❌ | Kontrak HTTP: status, header, manifest, aset |
-| 🔥 **Smoke** | `smoke` | 4 | campuran | Subset kritis untuk cek cepat |
+| 🖥️ **UI** | `ui` | 26 | ✅ | Login, catalog, sorting, product details, form validation, network |
+| 🛒 **E2E** | `e2e` | 12 | ✅ | Full shopping journeys across pages and users |
+| 🐞 **Known bugs** | `e2e` + `known_bug` | 7 | ✅ | Saucedemo's deliberately buggy users (strict xfail) |
+| 🌐 **API** | `api` | 7 | ❌ | HTTP contract: status, headers, manifest, assets |
+| 🔥 **Smoke** | `smoke` | 4 | mixed | Critical subset for a quick check |
 
 ---
 
-## 🗺️ Arsitektur (Page Object Model)
+## 🗺️ Architecture (Page Object Model)
 
-Test **tidak pernah** menyentuh selector secara langsung. Semua interaksi lewat *page object*, dan semua data lewat *model*.
+Tests **never** touch selectors directly. Every interaction goes through a *page object*, and all data goes through *models*.
 
 ```mermaid
 flowchart LR
@@ -116,7 +126,7 @@ flowchart LR
     PO -->|Playwright| S
 ```
 
-### Navigasi fluent: tiap aksi mengembalikan halaman berikutnya
+### Fluent navigation: every action returns the next page
 
 ```mermaid
 stateDiagram-v2
@@ -136,7 +146,7 @@ stateDiagram-v2
     InventoryPage --> LoginPage: header.logout()
 ```
 
-Hasilnya, satu alur belanja bisa ditulis seperti kalimat:
+As a result, a shopping flow reads like a sentence:
 
 ```python
 overview = (
@@ -151,7 +161,7 @@ assert overview.summary() == OrderSummary.expected_for([Products.BACKPACK, Produ
 ```
 
 <details>
-<summary>🔍 <b>Lihat diagram kelas lengkap</b></summary>
+<summary>🔍 <b>Show the full class diagram</b></summary>
 
 ```mermaid
 classDiagram
@@ -198,40 +208,40 @@ classDiagram
 </details>
 
 <details>
-<summary>📐 <b>Aturan POM yang dipakai di project ini</b></summary>
+<summary>📐 <b>POM rules used in this project</b></summary>
 
-| # | Aturan | Kenapa |
+| # | Rule | Why |
 |:-:|---|---|
-| 1 | Locator didefinisikan sekali di `__init__` page object | Kalau UI berubah, cukup ubah 1 tempat |
-| 2 | Aksi yang pindah halaman **mengembalikan page object berikutnya** | Test terbaca sebagai alur user, IDE bisa autocomplete |
-| 3 | Setiap halaman baru diverifikasi dengan `should_be_loaded()` | Gagal cepat di langkah yang tepat, bukan 3 langkah kemudian |
-| 4 | Bagian UI yang berulang jadi **component** (`HeaderComponent`, `ProductCard`) | `ProductCard` dipakai ulang di 4 halaman |
-| 5 | Page object mengembalikan **model** (`Product`, `OrderSummary`), bukan string | Test membandingkan objek bisnis, bukan teks mentah |
-| 6 | Uang pakai `Decimal`, bukan `float` | `0.1 + 0.2 != 0.3` tidak akan bikin test flaky |
-| 7 | Assertion tetap di test (kecuali `should_*` helper) | Page object = "cara", test = "apa yang diharapkan" |
+| 1 | Locators are defined once, in the page object's `__init__` | When the UI changes, you fix it in one place |
+| 2 | Actions that change pages **return the next page object** | Tests read as a user journey, and the IDE can autocomplete |
+| 3 | Every new page is verified with `should_be_loaded()` | Fails fast at the right step, not three steps later |
+| 4 | Repeated UI pieces become **components** (`HeaderComponent`, `ProductCard`) | `ProductCard` is reused on 4 pages |
+| 5 | Page objects return **models** (`Product`, `OrderSummary`), not strings | Tests compare business objects, not raw text |
+| 6 | Money uses `Decimal`, not `float` | `0.1 + 0.2 != 0.3` can never make a test flaky |
+| 7 | Assertions live in tests (except `should_*` helpers) | Page object = "how", test = "what is expected" |
 </details>
 
 <details>
-<summary>📁 <b>Struktur folder</b></summary>
+<summary>📁 <b>Folder structure</b></summary>
 
 ```text
 .
-├── .github/workflows/tests.yml     # CI: job API + matrix UI/E2E (chromium/firefox/webkit)
+├── .github/workflows/tests.yml     # CI: API job + UI/E2E matrix (chromium/firefox/webkit)
 ├── conftest.py                     # Fixtures: login_page, inventory_page, api_context
 ├── data/
-│   ├── models.py                   # Product, Customer, User, OrderSummary (+ rumus pajak 8%)
-│   └── test_data.py                # Users, Products (katalog), CUSTOMER, info pembayaran
+│   ├── models.py                   # Product, Customer, User, OrderSummary (+ 8% tax formula)
+│   └── test_data.py                # Users, Products (catalog), CUSTOMER, payment info
 ├── pages/
-│   ├── base_page.py                # BasePage + AppPage (halaman setelah login)
+│   ├── base_page.py                # BasePage + AppPage (pages behind login)
 │   ├── components/
-│   │   ├── header.py               # Menu burger, badge keranjang, logout, reset
-│   │   └── product_card.py         # Satu produk (dipakai di inventory/detail/cart/overview)
+│   │   ├── header.py               # Burger menu, cart badge, logout, reset
+│   │   └── product_card.py         # One product (used on inventory/detail/cart/overview)
 │   ├── login_page.py
 │   ├── inventory_page.py           # + SortOption enum
 │   ├── product_detail_page.py
 │   ├── cart_page.py
-│   ├── checkout_info_page.py       # Step 1: form data pembeli
-│   ├── checkout_overview_page.py   # Step 2: ringkasan & total
+│   ├── checkout_info_page.py       # Step 1: customer details form
+│   ├── checkout_overview_page.py   # Step 2: summary & totals
 │   └── checkout_complete_page.py
 ├── tests/
 │   ├── api/test_site_api.py
@@ -250,127 +260,127 @@ classDiagram
 
 ---
 
-## 🛒 Skenario E2E
+## 🛒 E2E Scenarios
 
-### Perjalanan belanja lengkap — `test_complete_shopping_journey`
+### Full shopping journey — `test_complete_shopping_journey`
 
 ```mermaid
 flowchart TD
-    A([🔐 Login sebagai standard_user]) --> B[↕️ Sort harga termurah dulu<br/>✔ urutan harga benar]
-    B --> C[🔎 Buka detail Fleece Jacket<br/>✔ data sama dengan katalog]
-    C --> D[➕ Add to cart dari halaman detail<br/>✔ badge = 1]
-    D --> E[⬅️ Kembali ke list<br/>✔ tombol jacket jadi 'Remove']
-    E --> F[➕ Tambah Backpack + Bike Light<br/>✔ badge = 3]
-    F --> G[🛒 Buka cart<br/>✔ 3 item, qty masing-masing 1]
-    G --> H[🗑️ Hapus Bike Light<br/>✔ badge = 2]
-    H --> I[🛍️ Continue shopping → tambah Onesie]
-    I --> J[📝 Checkout dengan form kosong<br/>✔ error 'First Name is required']
-    J --> K[📝 Isi data pembeli → Continue]
-    K --> L[🧾 Overview<br/>✔ item = isi cart<br/>✔ subtotal, pajak 8%, total<br/>✔ info pembayaran & pengiriman]
-    L --> M[✅ Finish<br/>✔ 'Thank you for your order!'<br/>✔ cart kosong]
-    M --> N[🏠 Back home<br/>✔ tidak ada tombol 'Remove' tersisa]
-    N --> O([🚪 Logout<br/>✔ /inventory.html terkunci lagi])
+    A([🔐 Log in as standard_user]) --> B[↕️ Sort by price, low to high<br/>✔ prices are in order]
+    B --> C[🔎 Open Fleece Jacket details<br/>✔ data matches the catalog]
+    C --> D[➕ Add to cart from the detail page<br/>✔ badge = 1]
+    D --> E[⬅️ Back to the list<br/>✔ jacket button now says 'Remove']
+    E --> F[➕ Add Backpack + Bike Light<br/>✔ badge = 3]
+    F --> G[🛒 Open the cart<br/>✔ 3 items, quantity 1 each]
+    G --> H[🗑️ Remove Bike Light<br/>✔ badge = 2]
+    H --> I[🛍️ Continue shopping → add Onesie]
+    I --> J[📝 Check out with an empty form<br/>✔ error 'First Name is required']
+    J --> K[📝 Fill in customer details → Continue]
+    K --> L[🧾 Overview<br/>✔ items = cart contents<br/>✔ subtotal, 8% tax, total<br/>✔ payment & shipping info]
+    L --> M[✅ Finish<br/>✔ 'Thank you for your order!'<br/>✔ cart is empty]
+    M --> N[🏠 Back home<br/>✔ no 'Remove' buttons left]
+    N --> O([🚪 Log out<br/>✔ /inventory.html is locked again])
 ```
 
 <details>
-<summary>📋 <b>Semua skenario E2E (12 test)</b></summary>
+<summary>📋 <b>All E2E scenarios (12 tests)</b></summary>
 
-| Test | Yang dibuktikan |
+| Test | What it proves |
 |---|---|
-| `test_complete_shopping_journey` | Alur 14 langkah di atas |
-| `test_checkout_totals_per_user_and_basket` ×6 | **2 user** (`standard_user`, `performance_glitch_user`) × **3 keranjang** (1 item termurah, 2 item harga sama, seluruh katalog) — item & total di overview selalu benar |
-| `test_entire_catalog_total_matches_known_value` | Mengunci rumus pajak ke angka nyata: `$129.94 + $10.40 = $140.34` |
-| `test_cancel_on_info_step_returns_to_cart_with_items` | Cancel di step 1 → kembali ke cart, isi tetap |
-| `test_cancel_on_overview_keeps_cart` | Cancel di step 2 → kembali ke inventory, cart tetap |
-| `test_cart_persists_across_reload_and_pages` | Cart bertahan setelah reload & pindah ke halaman detail |
-| `test_reset_app_state_empties_cart` | Menu *Reset App State* mengosongkan cart |
+| `test_complete_shopping_journey` | The 14-step flow above |
+| `test_checkout_totals_per_user_and_basket` ×6 | **2 users** (`standard_user`, `performance_glitch_user`) × **3 baskets** (cheapest single item, two same-priced items, entire catalog) — overview items & totals are always correct |
+| `test_entire_catalog_total_matches_known_value` | Pins the tax formula to real numbers: `$129.94 + $10.40 = $140.34` |
+| `test_cancel_on_info_step_returns_to_cart_with_items` | Cancel on step 1 → back to the cart, contents intact |
+| `test_cancel_on_overview_keeps_cart` | Cancel on step 2 → back to inventory, cart intact |
+| `test_cart_persists_across_reload_and_pages` | Cart survives a reload and navigating to a detail page |
+| `test_reset_app_state_empties_cart` | The *Reset App State* menu item empties the cart |
 </details>
 
 ---
 
 ## 🐞 Known Bugs
 
-Saucedemo punya user yang **sengaja dibuat bermasalah**. Test-nya menuliskan perilaku yang *benar* dan diberi `xfail(strict=True)`:
+Saucedemo has users that are **deliberately broken**. These tests assert the *correct* behavior and are marked `xfail(strict=True)`:
 
 ```mermaid
 flowchart LR
-    T[Test known_bug] --> Q{Bug masih ada?}
-    Q -- Ya --> X["🟡 XFAIL<br/>suite tetap hijau"]
-    Q -- "Tidak (sudah diperbaiki)" --> F["🔴 XPASS → FAILED<br/>hapus marker xfail,<br/>jadikan regression test"]
+    T[known_bug test] --> Q{Bug still present?}
+    Q -- Yes --> X["🟡 XFAIL<br/>suite stays green"]
+    Q -- "No (fixed)" --> F["🔴 XPASS → FAILED<br/>remove the xfail marker,<br/>promote to a regression test"]
 ```
 
-| User | Bug yang terdeteksi |
+| User | Detected bug |
 |---|---|
-| `problem_user` | Sort Z→A tidak mengurutkan |
-| `problem_user` | Semua gambar produk sama (placeholder 404) |
-| `problem_user` | Mengetik *Last Name* malah menimpa *First Name* |
-| `problem_user`, `error_user` | Sebagian tombol *Add to cart* tidak berfungsi |
-| `error_user` | Tombol *Finish* tidak menyelesaikan order |
-| `visual_user` | Harga di inventory beda dengan katalog |
+| `problem_user` | Sorting Z→A does not sort |
+| `problem_user` | Every product image is the same (404 placeholder) |
+| `problem_user` | Typing in *Last Name* overwrites *First Name* |
+| `problem_user`, `error_user` | Some *Add to cart* buttons do nothing |
+| `error_user` | The *Finish* button does not complete the order |
+| `visual_user` | Inventory prices differ from the catalog |
 
 ---
 
-## 🌐 Tentang API Test
+## 🌐 About the API Tests
 
 > [!IMPORTANT]
-> Saucedemo adalah SPA statis di GitHub Pages — **tidak punya REST API publik**.
+> Saucedemo is a static SPA hosted on GitHub Pages — **it has no public REST API**.
 
-Jadi `tests/api/` menguji kontrak HTTP yang benar-benar disajikan server memakai `APIRequestContext` Playwright (tanpa browser): status code, `content-type`, `ETag`/`cache-control`, HTML shell, `manifest.json` + ikonnya, bundle JS/CSS, halaman 404, dan waktu respons. `tests/ui/test_network.py` menggabungkan UI + network: memantau request gagal dan memblokir gambar dengan `page.route`.
+So `tests/api/` checks the HTTP contract the server actually serves, using Playwright's `APIRequestContext` (no browser): status codes, `content-type`, `ETag`/`cache-control`, the HTML shell, `manifest.json` and its icons, the JS/CSS bundles, the 404 page, and response time. `tests/ui/test_network.py` combines UI and network: it watches for failed requests and blocks images with `page.route`.
 
 ---
 
-## ⌨️ Cheat Sheet Perintah
+## ⌨️ Command Cheat Sheet
 
-| Saya ingin… | Perintah |
+| I want to… | Command |
 |---|---|
-| Jalankan semua test (paralel) | `pytest -n auto` |
-| Hanya smoke test | `pytest -m smoke` |
-| Hanya E2E | `pytest -m e2e` |
-| UI + E2E tanpa known bugs | `pytest -m "(ui or e2e) and not known_bug"` |
-| Hanya API (tanpa browser) | `pytest -m api` |
-| Satu file / satu test | `pytest tests/e2e/test_purchase_journey.py::test_complete_shopping_journey` |
-| Cari test berdasarkan nama | `pytest -k checkout` |
-| **Lihat browser-nya bergerak** 👀 | `pytest -m smoke --headed --slowmo 500` |
-| Browser lain | `pytest --browser firefox` · `--browser webkit` |
-| Laporan HTML | `pytest --html=reports/report.html --self-contained-html` |
-| Lihat semua test tanpa menjalankan | `pytest --collect-only -q` |
-| Debug langkah demi langkah | `PWDEBUG=1 pytest -k complete_shopping` |
+| Run all tests (in parallel) | `pytest -n auto` |
+| Run only smoke tests | `pytest -m smoke` |
+| Run only E2E | `pytest -m e2e` |
+| Run UI + E2E without known bugs | `pytest -m "(ui or e2e) and not known_bug"` |
+| Run only API (no browser) | `pytest -m api` |
+| Run one file / one test | `pytest tests/e2e/test_purchase_journey.py::test_complete_shopping_journey` |
+| Find tests by name | `pytest -k checkout` |
+| **Watch the browser in action** 👀 | `pytest -m smoke --headed --slowmo 500` |
+| Use another browser | `pytest --browser firefox` · `--browser webkit` |
+| Generate an HTML report | `pytest --html=reports/report.html --self-contained-html` |
+| List tests without running them | `pytest --collect-only -q` |
+| Debug step by step | `PWDEBUG=1 pytest -k complete_shopping` |
 
 <details>
-<summary>🔬 <b>Investigasi test yang gagal (trace viewer)</b></summary>
+<summary>🔬 <b>Investigating a failed test (trace viewer)</b></summary>
 
-Saat test gagal, screenshot, video, dan **trace** otomatis disimpan di `test-results/`. Trace berisi timeline setiap aksi, snapshot DOM, network, dan console:
+When a test fails, a screenshot, a video and a **trace** are saved automatically to `test-results/`. The trace contains a timeline of every action, DOM snapshots, network and console output:
 
 ```bash
-python -m playwright show-trace test-results/<nama-test>/trace.zip
+python -m playwright show-trace test-results/<test-name>/trace.zip
 ```
 
-Atau drag & drop `trace.zip` ke **[trace.playwright.dev](https://trace.playwright.dev)** — tidak perlu install apa pun. File yang sama juga tersedia sebagai artifact di GitHub Actions.
+Or drag and drop `trace.zip` onto **[trace.playwright.dev](https://trace.playwright.dev)** — no install needed. The same files are available as artifacts in GitHub Actions.
 </details>
 
 <details>
-<summary>⚙️ <b>Konfigurasi lewat environment variable</b></summary>
+<summary>⚙️ <b>Configuration via environment variables</b></summary>
 
-| Variabel | Default | Kegunaan |
+| Variable | Default | Purpose |
 |---|---|---|
-| `BASE_URL` | `https://www.saucedemo.com` | Arahkan test ke environment lain |
-| `SAUCE_PASSWORD` | `secret_sauce` | Password semua test user |
+| `BASE_URL` | `https://www.saucedemo.com` | Point the tests at another environment |
+| `SAUCE_PASSWORD` | `secret_sauce` | Password for all test users |
 </details>
 
 ---
 
-## ✍️ Menambah Test Baru (Contoh)
+## ✍️ Adding a New Test (Example)
 
-Misal ingin menguji: *"menghapus item dari halaman detail mengurangi badge"*.
+Say you want to test: *"removing an item from the detail page decreases the badge"*.
 
 <details>
-<summary><b>Langkah 1</b> — Cek apakah page object sudah punya aksinya</summary>
+<summary><b>Step 1</b> — Check whether the page object already has the action</summary>
 
-`ProductDetailPage` sudah punya `add_to_cart()` dan `remove()`, dan header punya `should_have_cart_count()`. Tidak perlu menulis selector baru. Kalau belum ada, tambahkan locator di `__init__` dan method-nya di page object yang sesuai — **jangan** di test.
+`ProductDetailPage` already has `add_to_cart()` and `remove()`, and the header has `should_have_cart_count()`. No new selectors needed. If something is missing, add the locator in `__init__` and the method in the matching page object — **not** in the test.
 </details>
 
 <details>
-<summary><b>Langkah 2</b> — Tulis test memakai fixture + data</summary>
+<summary><b>Step 2</b> — Write the test using fixtures + data</summary>
 
 ```python
 # tests/ui/test_product_detail.py
@@ -391,21 +401,21 @@ def test_remove_from_detail_updates_badge(inventory_page):
 </details>
 
 <details>
-<summary><b>Langkah 3</b> — Jalankan & lihat</summary>
+<summary><b>Step 3</b> — Run it and watch</summary>
 
 ```bash
 pytest tests/ui/test_product_detail.py --headed --slowmo 500
 ```
 </details>
 
-**Fixture yang tersedia:**
+**Available fixtures:**
 
-| Fixture | Memberi | Catatan |
+| Fixture | Provides | Notes |
 |---|---|---|
-| `login_page` | `LoginPage` yang sudah dibuka | Untuk test yang login lewat form |
-| `inventory_page` | `InventoryPage` sebagai `standard_user` | Login **instan** via cookie, tanpa isi form |
-| `logged_in_page` | `Page` Playwright yang sudah login | Untuk setup custom (mis. `page.route`) |
-| `api_context` | `APIRequestContext` | Untuk test HTTP tanpa browser |
+| `login_page` | An opened `LoginPage` | For tests that log in through the form |
+| `inventory_page` | `InventoryPage` as `standard_user` | **Instant** login via cookie, no form |
+| `logged_in_page` | A logged-in Playwright `Page` | For custom setup (e.g. `page.route`) |
+| `api_context` | `APIRequestContext` | For HTTP tests without a browser |
 
 ---
 
@@ -413,8 +423,8 @@ pytest tests/ui/test_product_detail.py --headed --slowmo 500
 
 ```mermaid
 flowchart LR
-    TR["⏰ Trigger<br/>push main · PR ·<br/>manual · harian 08:00 WIB"] --> API["🌐 Job API<br/>tanpa browser"]
-    TR --> M{{"🖥️ Matrix UI + E2E"}}
+    TR["⏰ Triggers<br/>push to main · PR ·<br/>manual · daily 01:00 UTC"] --> API["🌐 API job<br/>no browser"]
+    TR --> M{{"🖥️ UI + E2E matrix"}}
     M --> CH[chromium]
     M --> FF[firefox]
     M --> WK[webkit]
@@ -422,22 +432,22 @@ flowchart LR
     CH --> R
     FF --> R
     WK --> R
-    R --> R1["HTML report + JUnit XML<br/>(selalu)"]
-    R --> R2["screenshot · video · trace<br/>(hanya jika gagal)"]
+    R --> R1["HTML report + JUnit XML<br/>(always)"]
+    R --> R2["screenshot · video · trace<br/>(only on failure)"]
 ```
 
-- Test UI/E2E berjalan paralel (`-n auto`) dengan 1× *rerun* untuk mengurangi flaky.
-- **Menjalankan manual:** tab **Actions** → **Tests** → **Run workflow** → isi *marker* (mis. `smoke`, `e2e`, atau `ui and not known_bug`).
-- Ganti `<username>` di badge paling atas dengan username GitHub Anda agar status CI tampil.
+- UI/E2E tests run in parallel (`-n auto`) with 1 *rerun* to reduce flakiness.
+- **Manual run:** **Actions** tab → **Tests** → **Run workflow** → enter a *marker* (e.g. `smoke`, `e2e`, or `ui and not known_bug`).
+- Latest runs: [github.com/HivanA98/Playwright_Python/actions](https://github.com/HivanA98/Playwright_Python/actions)
 
 ---
 
 ## ❓ Troubleshooting
 
 <details>
-<summary><code>playwright: command not found</code> / browser tidak ditemukan</summary>
+<summary><code>playwright: command not found</code> / browser not found</summary>
 
-Pakai `python -m playwright ...` alih-alih `playwright ...`, lalu install browser-nya:
+Use `python -m playwright ...` instead of `playwright ...`, then install the browser:
 
 ```bash
 python -m playwright install chromium
@@ -445,19 +455,19 @@ python -m playwright install chromium
 </details>
 
 <details>
-<summary>Muncul <code>xfailed</code> — apakah test saya rusak?</summary>
+<summary>I see <code>xfailed</code> — are my tests broken?</summary>
 
-Tidak. Itu test di `tests/e2e/test_known_bugs.py` untuk bug yang memang disengaja oleh Saucedemo. Yang perlu diwaspadai adalah **XPASS/FAILED** di file itu — artinya bug sudah diperbaiki dan test perlu diperbarui.
+No. Those are the tests in `tests/e2e/test_known_bugs.py` for bugs Saucedemo ships on purpose. What to watch for is an **XPASS/FAILED** in that file — it means a bug was fixed and the test needs updating.
 </details>
 
 <details>
-<summary>Test <code>performance_glitch_user</code> lambat</summary>
+<summary><code>performance_glitch_user</code> tests are slow</summary>
 
-Normal — user itu sengaja dibuat lambat ±5 detik saat login. Timeout `expect` diset 15 detik di `conftest.py` untuk mengakomodasinya.
+That's expected — this user is deliberately ~5 seconds slow to log in. The `expect` timeout is set to 15 seconds in `conftest.py` to accommodate it.
 </details>
 
 <details>
-<summary>Selector tiba-tiba tidak ditemukan</summary>
+<summary>A selector suddenly can't be found</summary>
 
-Saucedemo kadang memperbarui tampilannya. Semua selector ada di `pages/` dan memakai atribut `data-test`, jadi cukup perbaiki di page object terkait — test tidak perlu diubah. Jalankan dengan `--headed --slowmo 500` atau buka trace untuk melihat kondisi halaman.
+Saucedemo occasionally updates its UI. All selectors live in `pages/` and use the `data-test` attribute, so you only fix the relevant page object — tests stay unchanged. Run with `--headed --slowmo 500` or open the trace to see the page state.
 </details>
